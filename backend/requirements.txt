@@ -1,0 +1,14 @@
+# --- Web framework ---
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.7.0
+python-dotenv>=1.0.1
+
+# --- Agents (Google ADK + Gemini) ---
+google-adk>=0.2.0
+google-genai>=1.0.0
+mcp>=1.0.0
+
+# --- Data storage / GraphRAG ---
+google-cloud-bigquery>=3.25.0
+neo4j>=5.22.0
