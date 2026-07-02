@@ -7,7 +7,10 @@ python-dotenv>=1.0.1
 # --- Agents (Google ADK + Gemini) ---
 google-adk>=0.2.0
 google-genai>=1.0.0
-mcp>=1.0.0
+
+# --- Web Scraping (Firecrawl — free tier, no credit card) ---
+firecrawl-py>=1.0.0
+requests>=2.32.0
 
 # --- Data storage / GraphRAG ---
 google-cloud-bigquery>=3.25.0
