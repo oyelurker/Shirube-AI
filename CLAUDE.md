@@ -24,7 +24,7 @@ shirube-ai/
 │   └── agents/               # Google ADK multi-agent system
 │       ├── agent.py          # root_agent — orchestrator
 │       ├── config.py         # Model + env configuration
-│       ├── tools.py          # BrightData MCP web-scraping toolset
+│       ├── tools.py          # Firecrawl web-scraping toolset (free tier)
 │       ├── prompt.py         # Root orchestrator instructions
 │       ├── flight_agent/     # Economic Data Harvester: air-travel supply/demand
 │       ├── hotel_agent/      # Economic Data Harvester: lodging capacity & pricing
@@ -93,10 +93,7 @@ Defined and consumed in `backend/agents/config.py` and `backend/agents/tools.py`
 | `GOOGLE_GENAI_USE_VERTEXAI` | `True`/`False` — route model calls through Vertex AI. |
 | `GOOGLE_CLOUD_PROJECT` | GCP project ID (Vertex AI, BigQuery, Cloud Run). |
 | `GOOGLE_CLOUD_LOCATION` | GCP region (e.g. `us-central1`). |
-| `BRIGHTDATA_API_TOKEN` | BrightData account token. |
-| `API_TOKEN` | BrightData MCP auth token (passed to the MCP server). |
-| `WEB_UNLOCKER_ZONE` | BrightData Web Unlocker zone for scraping. |
-| `BROWSER_AUTH` | BrightData scraping-browser auth string. |
+| `FIRECRAWL_API_KEY` | Firecrawl API key for web scraping. Free tier at firecrawl.dev (no credit card). If unset, Jina AI Reader is used as a zero-config fallback. |
 | `BIGQUERY_DATASET` | Target dataset for harvested tourism/economic insights. |
 | `NEO4J_URI` | Neo4j connection URI for the GraphRAG knowledge graph. |
 | `NEO4J_USERNAME` | Neo4j username. |
@@ -104,7 +101,7 @@ Defined and consumed in `backend/agents/config.py` and `backend/agents/tools.py`
 
 ## Architecture
 
-Shirube AI is a **hierarchical multi-agent system** built on the **Google Agent Development Kit (ADK)**. A single `root_agent` orchestrates eight specialized coordinator agents. Each coordinator wraps its own sub-agents (planner / searcher / advisor style) and calls out to the web via the **BrightData MCP** toolset.
+Shirube AI is a **hierarchical multi-agent system** built on the **Google Agent Development Kit (ADK)**. A single `root_agent` orchestrates eight specialized coordinator agents. Each coordinator wraps its own sub-agents (planner / searcher / advisor style) and calls out to the web via the **Firecrawl** scraping toolset (free tier — no credit card required).
 
 ```
                         ┌─────────────────────────┐
@@ -119,7 +116,7 @@ Shirube AI is a **hierarchical multi-agent system** built on the **Google Agent 
    │          │          │       agent       │          │         │          │
    └──────────┴──────────┴─────────┴─────────┴──────────┴─────────┴──────────┘
                                     │
-                          BrightData MCP (scraping)
+                          Firecrawl / Jina AI (scraping)
                                     │
                      ┌──────────────┴───────────────┐
               ┌──────▼──────┐               ┌────────▼────────┐
@@ -136,7 +133,7 @@ Shirube AI is a **hierarchical multi-agent system** built on the **Google Agent 
 
 **Data flow (harvest → structure → decide):**
 1. The orchestrator dispatches harvesting tasks to the relevant coordinator agents.
-2. Coordinators scrape live tourism-market data through the BrightData MCP toolset.
+2. Coordinators scrape live tourism-market data through the **Firecrawl** toolset (`scrape_url` / `scrape_url_json`). Falls back to Jina AI Reader if the API key is absent.
 3. **Gemini 2.0 Flash** normalizes raw results into structured economic records.
 4. Records land in **BigQuery** (analytics) and entities/relationships are written to **Neo4j** for **GraphRAG** retrieval.
 5. FastAPI exposes query + insight endpoints that the React dashboard renders for stakeholders.
@@ -160,7 +157,7 @@ All agents live under `backend/agents/`. Each coordinator is defined in its pack
 
 **Conventions when editing agents:**
 - Shared config comes from `agents.config` (`DEFAULT_MODEL`, `DEFAULT_GENERATION_CONFIG`).
-- The scraping toolset comes from `agents.tools` (`toolset` / `web_scraping_toolset`).
+- The scraping toolset comes from `agents.tools` (`toolset` / `web_scraping_toolset`). Backed by Firecrawl with a Jina AI zero-config fallback.
 - Cross-package imports are **absolute** from the `agents.` root (e.g. `from agents.flight_agent.agent import flight_booking_system`); intra-package imports are **relative** (e.g. `from .prompt import ...`).
 - Add a new harvester by creating `agents/<name>_agent/{__init__.py,agent.py,prompt.py}` and registering its coordinator in `agents/agent.py`'s `sub_agents` list.
 
@@ -207,4 +204,4 @@ gcloud run deploy shirube-ai \
   --allow-unauthenticated
 ```
 
-Provide secrets (`GOOGLE_API_KEY`, BrightData tokens, Neo4j credentials) via Cloud Run environment variables or Secret Manager. Grant the service account BigQuery and Vertex AI permissions.
+Provide secrets (`GOOGLE_API_KEY`, `FIRECRAWL_API_KEY`, Neo4j credentials) via Cloud Run environment variables or Secret Manager. Grant the service account BigQuery and Vertex AI permissions.
