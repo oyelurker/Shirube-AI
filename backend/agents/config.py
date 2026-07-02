@@ -32,10 +32,7 @@ DEFAULT_GENERATION_CONFIG = GenerateContentConfig(
 
 # API Configuration
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-BRIGHTDATA_API_TOKEN = os.getenv("BRIGHTDATA_API_TOKEN")
-API_TOKEN = os.getenv("API_TOKEN")
-WEB_UNLOCKER_ZONE = os.getenv("WEB_UNLOCKER_ZONE")
-BROWSER_AUTH = os.getenv("BROWSER_AUTH")
+FIRECRAWL_API_KEY = os.getenv("FIRECRAWL_API_KEY")
 
 # Vertex AI Configuration
 USE_VERTEX_AI = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "False").lower() == "true"
